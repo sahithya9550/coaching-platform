@@ -1,4 +1,6 @@
+import { Turnstile } from '@marsidev/react-turnstile'
 import { useState } from 'react'
+import type { FormEvent } from 'react'
 import './App.css'
 
 const courses = [
@@ -29,6 +31,10 @@ const courses = [
 ]
 
 function App() {
+  const [turnstileToken, setTurnstileToken] = useState('')
+  const [turnstileVersion, setTurnstileVersion] = useState(0)
+  const [submitting, setSubmitting] = useState(false)
+  const [formError, setFormError] = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
   const [form, setForm] = useState({
     name: '',
@@ -39,10 +45,46 @@ function App() {
   })
   const [submitted, setSubmitted] = useState(false)
 
-  function handleDemo(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    // Next phase: securely save the enquiry to Supabase.
-    setSubmitted(true)
+  async function handleDemo(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (submitting) return
+
+    setFormError('')
+    if (!turnstileToken) {
+      setFormError('Please complete the security verification.')
+      return
+    }
+
+    setSubmitting(true)
+    try {
+      const response = await fetch(
+        'https://utgoqcobfqmfpnbcsvbf.supabase.co/functions/v1/submit-demo-enquiry',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            student_name: form.name.trim(),
+            parent_email: form.email.trim(),
+            parent_phone: form.phone.trim(),
+            student_class: Number(form.grade),
+            exam_type: form.exam,
+            turnstile_token: turnstileToken,
+          }),
+        }
+      )
+
+      const result: { success?: boolean; error?: string } = await response.json()
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Unable to submit your enquiry.')
+      }
+      setSubmitted(true)
+    } catch (error) {
+      setFormError(error instanceof Error ? error.message : 'Something went wrong.')
+      setTurnstileToken('')
+      setTurnstileVersion((previous) => previous + 1)
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -226,19 +268,23 @@ function App() {
 
           <div className="demo-form-card">
             <h3>Request a Free Demo</h3>
-            <p>Complete the form to prepare your enquiry.</p>
+            <p>Submit your details to request one free demo class.</p>
 
             {submitted ? (
               <div className="form-notice" role="status">
-                <strong>Enquiry details prepared.</strong>
-                <p>
-                  This form is currently a preview. Your details
-                  have not been sent or saved. We will connect
-                  secure submission in the next development phase.
-                </p>
-                <button className="btn btn-primary"
-                  onClick={() => setSubmitted(false)}>
-                  Edit Details
+                <strong>Enquiry submitted successfully!</strong>
+                <p>Your request has been received and is awaiting review.</p>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => {
+                    setForm({ name: '', email: '', phone: '', grade: '11', exam: 'JEE Main' })
+                    setSubmitted(false)
+                    setTurnstileToken('')
+                    setTurnstileVersion((previous) => previous + 1)
+                  }}
+                >
+                  Submit another enquiry
                 </button>
               </div>
             ) : (
@@ -275,10 +321,22 @@ function App() {
                     </select>
                   </label>
                 </div>
-                <button type="submit" className="btn btn-primary submit-btn">
-                  Preview Demo Enquiry →
+                <Turnstile
+                  key={turnstileVersion}
+                  siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY || ''}
+                  onSuccess={(token) => setTurnstileToken(token)}
+                  onExpire={() => setTurnstileToken('')}
+                  onError={() => setTurnstileToken('')}
+                />
+                {formError && <p role="alert" style={{ color: '#b91c1c' }}>{formError}</p>}
+                <button
+                  type="submit"
+                  className="btn btn-primary submit-btn"
+                  disabled={submitting || !turnstileToken}
+                >
+                  {submitting ? 'Submitting...' : 'Request Free Demo →'}
                 </button>
-                <small>No information is transmitted in this preview.</small>
+                <small>We use these details only to respond to your demo enquiry.</small>
               </form>
             )}
           </div>
