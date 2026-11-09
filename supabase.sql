@@ -7,7 +7,7 @@ create table if not exists public.riit_enquiries (
  notes text not null default ''
 );
 alter table public.riit_enquiries enable row level security;
-revoke all on public.riit_enquiries from anon, authenticated;
-grant all on public.riit_enquiries to service_role;
+revoke all on public.riit_enquiries from public, anon, authenticated, service_role;
+grant select, insert, update on public.riit_enquiries to service_role;
 create index if not exists riit_enquiries_created_idx on public.riit_enquiries(created_at desc);
 -- No browser/anonymous policies. The server uses the secret service-role key.
