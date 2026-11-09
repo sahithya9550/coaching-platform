@@ -1,6 +1,7 @@
 services:
   - type: web
     name: riit-bharat-mentors
+    region: virginia
     runtime: node
     plan: free
     buildCommand: npm ci && npm run build
@@ -16,8 +17,8 @@ services:
       - key: SESSION_SECRET
         generateValue: true
       - key: ADMIN_PASSWORD
-        sync: false
+        generateValue: true
       - key: SUPABASE_URL
-        sync: false
+        value: https://utgoqcobfqmfpnbcsvbf.supabase.co
       - key: SUPABASE_SECRET_KEY
         sync: false
