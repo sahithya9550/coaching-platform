@@ -1,142 +1,155 @@
-# R-IIT Bharat Mentors — Standalone Edition
+# R-IIT Bharat Mentors
 
-**Personalised JEE & NEET Coaching**
-
+Personalised JEE & NEET Coaching  
 **Your Ambition. Our Guidance. A Personalised Path.**
 
-A self-contained React website and Node.js API. The owner uses a password you choose. No proprietary sign-in service or original hosting platform is required.
+Independent React + Node application. Runs without any ChatGPT login or paid AI API. SQLite locally; Supabase server-only REST storage when hosted on Render Free.
 
-## What is included
+## Live application
 
-- Coaching website, JEE/NEET/Foundation tabs, pricing calculator, FAQs and enquiry privacy notice.
-- Demo enquiry form with validation and adult/guardian consent.
-- Private owner inbox: search, statuses, internal notes, CSV export and logout.
-- SQLite storage for local use or a persistent server disk.
-- Optional Supabase database adapter for hosts with temporary disks.
-- Dockerfile and Render free-plan blueprint.
+- Website: https://riit-bharat-mentors-uu3f.onrender.com
+- Student studio: https://riit-bharat-mentors-uu3f.onrender.com/learn
+- Owner workspace: https://riit-bharat-mentors-uu3f.onrender.com/admin
+- Health: https://riit-bharat-mentors-uu3f.onrender.com/api/health
 
-Not included: automatic email/WhatsApp messages, payments, video classrooms, calendar booking, or a full learning-management system. You coordinate demos and contact parents yourself. The testing course remains marked as planned.
+## Included workflows
 
-## Run locally for zero software cost
+| Feature | Operation |
+| --- | --- |
+| Public site | Program tabs, pricing calculator, FAQs, privacy notice, validated demo enquiry form |
+| Owner inbox | Authenticated search, status/notes updates, CSV export |
+| Learning accounts | Adult/guardian email + password, scrypt password hashing, HttpOnly sessions, logout, owner-assisted password reset |
+| Practice | JEE, NEET, Foundation; exam/subject/difficulty/paper/topic filters; random sampling without repetition within each attempt; 1–90 questions; 1–180 minutes |
+| Scoring | Single-correct MCQs: +4 correct, −1 incorrect, 0 skipped; answer keys withheld until submission |
+| Analysis | Total marks, attempted accuracy, correct/incorrect/skipped, time used, topic accuracy, weak-topic suggestions, answer explanations and history |
+| Question bank | Admin uploads CSV/JSON/text/formatted text PDF, reviews extracted questions, publishes/hides questions, exports bank |
+| Lessons | One free demo per account, preferred-time requests, owner-confirmed time, private per-booking Google Meet link |
+| Payments | Paid one-hour lesson requests after completed demo; owner-configured UPI ID/payee/price; bank-reference submission; manual owner verification |
+| Owner oversight | Student results and topic breakdowns, lesson management, payment settings, lesson terms, downloadable learning backup |
 
-Install Node.js 22 LTS, version 22.13 or newer, and npm. Extract this ZIP and open Terminal in the project directory.
+## Start using the deployed app
+
+1. Open `/admin`. Sign in with the value of **ADMIN_PASSWORD** in your Render service → Environment. If you set ADMIN_PASSWORD_HASH instead, use the original password you hashed. Keep these values private. Nothing is printed in the app or committed.
+2. Under **Payment & terms**, enter your real UPI ID, exact payee name, lesson price, business contact email, payment instructions and rescheduling/refund terms. Save. No sample payee is configured on the live site. Paid bookings stay closed until these details are supplied.
+3. Under **Question bank**, the original starter bank is available. Download a CSV or JSON template for your own papers. Upload, validate, review every answer and explanation, confirm usage rights and publish. Hide a question to stop future tests using it.
+4. A learner/guardian opens `/learn`, creates an account with a 12–128 character password and consent, then starts practice or requests a free demo under **My lessons**. This app does not send account verification emails; email identifies the account.
+5. In **Lessons**, create a meeting using the **Create a Google Meet link** button. Google requires your own Google account. Paste the generated `https://meet.google.com/abc-defg-hij` link, select the confirmed lesson time and save as Scheduled. The student sees the link in their account. A requested time is not an automatically reserved calendar slot; coordinate tutor availability yourself.
+6. After delivering the demo, mark it Completed. The student can request a one-hour paid lesson. Their booking quotes the current price, UPI payee and terms. They pay using a compatible phone UPI/bank app and submit the transaction reference.
+7. Check your actual bank receipt. Only then select **Verified** and confirm the paid lesson time/Meet link. A submitted reference is never treated as proof of payment. The application does not receive funds or verify bank transactions automatically.
+8. Review student test summaries/topic analysis in **Students & results**. Use the backup download regularly and keep it private. Verify identity before resetting a learner password.
+
+## Run on your computer
+
+Node.js **22.13+** (Node 22 LTS recommended) and npm required.
 
 ```bash
+git clone --branch riit-bharat-launch --single-branch https://github.com/sahithya9550/coaching-platform.git
+cd coaching-platform
 npm ci
 npm run setup
 npm run build
 npm start
 ```
 
-The ZIP also includes a prebuilt frontend. For the quickest run, skip installation and rebuilding and run just `npm run setup`, then `npm start`. Node.js is still required.
-
-During setup, choose a unique admin password of at least 12 characters. Terminal input is visible, so run setup privately. Setup saves a password hash and a random session secret to `.env`; it does not include a preset password.
-
-Open:
+Choose a unique owner password during setup. Setup creates private `.env` with a password hash, random SESSION_SECRET and DB_PROVIDER=sqlite. Input is visible in your terminal, so run it privately.
 
 - Website: http://localhost:3000
-- Owner inbox: http://localhost:3000/admin
+- Learner: http://localhost:3000/learn
+- Owner: http://localhost:3000/admin
 
-Sign in with the password you chose. Records stay in `data/enquiries.sqlite`. Back up that file (with the server stopped) and `.env` privately. Do not upload either to a public repository. Stop with Control+C. Restart with `npm start`.
+In the local owner workspace click **Question bank → Add original starter questions**. A fresh local database starts empty. Hosted questions are not copied to your computer automatically.
 
-`npm run dev` rebuilds the frontend and starts the same server. It does not provide automatic hot reload. `npm test` runs the backend integration and persistence tests.
+Records persist in `data/enquiries.sqlite`. Stop with Ctrl+C. Restart with `npm start`. Back up this database with the server stopped, plus `.env`, privately. Sessions expire after eight hours and clear on restart; sign in again. `npm run dev` rebuilds and starts the server, without hot reload.
 
-## Zero-budget hosted option: Render Free + Supabase Free
+## Question import formats
 
-This is a free-tier deployment path for initial low-traffic use, not a promise of unlimited capacity or availability forever. You need your own free GitHub, Supabase and Render accounts. This package does not create those accounts or deploy into them automatically.
+CSV header:
 
-### 1. Create the database
-
-1. Sign in at https://supabase.com and create a **Free** project.
-2. Open SQL Editor and run the included `supabase.sql` once.
-3. Copy the project URL and the server-side **secret** API key (`sb_secret_...`) from the project's API settings. This key is server-only: never put it in `src/`, browser settings or a public repository.
-4. The SQL enables row-level security and denies browser/anonymous access. The Node server accesses the database on behalf of the application.
-
-### 2. Put the code in your GitHub repository
-
-Create a repository and upload the extracted project files. Include the dotfiles `.gitignore` and `.dockerignore`. Exclude `.env`, `data/`, `node_modules/`, and `dist/`.
-
-If using Git locally:
-
-```bash
-git init
-git add .
-git commit -m "Add standalone coaching website"
+```csv
+exam,subject,level,topic,text,A,B,C,D,correct,explanation,source,year,paper
+JEE,Chemistry,Easy,Mole concept,"Moles in 18 g of water (18 g/mol)?",0.5,1,2,18,B,"18/18 = 1 mol.",Original,,Practice
 ```
 
-Then follow GitHub's instructions to add your repository remote and push. No private credentials should be committed.
+JSON uses an array of objects with the same metadata, `options: ["A text","B text","C text","D text"]`, and `correct: "B"` or numeric index `1` (indexes 0–3). Download the exact templates in the admin workspace.
 
-### 3. Deploy on Render
+- Exam: JEE, NEET or Foundation.
+- Subject: Mathematics, Physics, Chemistry, Botany or Zoology.
+- Level: Easy, Medium or Hard; levels are assigned by the admin, not inferred by AI.
+- Required: topic, question text, four options, correct answer, explanation, source.
+- Optional: year and paper name.
+- 1–500 questions per import; file up to 5 MB. Repeat imports as needed within storage limits. Import requests are not a transaction across the whole batch; after a database/network error, check the bank before retrying to avoid duplicates.
 
-At https://render.com create a **Web Service**, connect your repository, and select **Free**. Use:
+Text PDFs and `.txt` files must use this grammar for every question:
 
-| Setting | Value |
-|---|---|
-| Build command | `npm ci && npm run build` |
-| Start command | `npm start` |
-| Health check | `/api/health` |
-| NODE_VERSION | `22` |
-| NODE_ENV | `production` |
-| DB_PROVIDER | `supabase` |
-| SUPABASE_URL | Your project's HTTPS URL |
-| SUPABASE_SECRET_KEY | Your server-only secret key |
-| ADMIN_PASSWORD | A unique password of at least 12 characters |
-| SESSION_SECRET | A random secret of at least 32 characters |
-
-Generate a session secret on your own computer:
-
-```bash
-node -e "console.log(require('node:crypto').randomBytes(48).toString('hex'))"
+```text
+Q1. What is 1 + 1?
+A) 1
+B) 2
+C) 3
+D) 4
+Answer: B
+Explanation: Adding one and one gives two.
 ```
 
-Paste the result into Render's secret environment settings. Keep it private. Alternatively, use the supplied `render.yaml` Blueprint; it selects the Free plan and generates SESSION_SECRET automatically. Confirm that no paid resources are selected before deploying.
+For PDF/text choose exam, subject, level, topic and source in the import form. Extraction supports text PDFs up to 100 pages, not arbitrary paper layouts. Scans need transcription/OCR outside this app. Diagrams, numerical-response questions, multiple-correct JEE Advanced formats and complex equation rendering are not supported. All questions must be reviewed; the app never guesses missing answer keys.
 
-Use the actual free URL Render assigns, such as `your-service-name.onrender.com`. The example is not a reserved address. Open `/admin` at that same URL to sign in. Submit a dummy demo request, then verify it appears in the inbox, can be updated, and exports correctly.
+Starter bank: **24 original questions**, not official past-year questions. There is no preloaded complete IIT/JEE/NEET archive. Import only material you own or have permission to use and label paper/year/source accurately. Random tests draw from the published bank; if too few questions match, reduce the requested count or import more.
 
-### Free-plan limits
+## Free hosting and costs
 
-- Render Free web services sleep after 15 minutes without traffic; the next visit can take about a minute to start. They have usage quotas. Render's documentation positions Free instances for testing/hobby use, not production reliability.
-- Render Free local files are lost on restart, redeploy or idle shutdown. **Do not use SQLite on Render Free.** This app refuses to start in that configuration instead of silently losing enquiries.
-- Supabase Free currently includes 500 MB database space and may pause after a week of inactivity. Restore paused projects from its dashboard. Stay on Free and within quotas for a zero subscription budget.
-- Use a free hosting subdomain. A normal custom `.com` registration costs money and is not part of a zero-budget setup.
-- No free service is a guarantee of unlimited traffic or permanent uptime. Keep regular CSV backups of enquiries.
+This deployment selects **Render Free + Supabase Free** with a free `onrender.com` hostname. No gateway subscription, paid AI API, paid video service or paid custom domain is configured by this application. The account owner must keep the provider accounts on Free and monitor account-level usage/billing; this code cannot impose a provider-wide spending cap.
+
+**Free is not unlimited.** Render has monthly resource/bandwidth/build quotas and sleeps after 15 minutes idle; a cold start may take about a minute. Supabase Free currently includes a 500 MB database and limited egress; inactive projects can pause. Stored question snapshots and results consume database capacity. At scale you must archive data, self-host on your own hardware or choose more capacity. There is no promise of permanent zero-cost unlimited hosting or an uptime SLA.
+
+A regular `.com` registration costs money. The current free URL is the domain to use for a ₹0 launch. Direct UPI is a bank/app handoff, not a payment gateway integration; bank/provider terms apply. Automated card gateways typically charge transaction fees and require merchant setup, so none is enabled. Google Meet requires the mentor's own account and is subject to Google's limits.
 
 Sources checked 9 November 2026:
 - https://render.com/docs/free
 - https://supabase.com/pricing
+- https://support.google.com/meet/answer/7317473
+- https://razorpay.com/pricing/
 
-## Run on another host
+## Re-deploy / move to another host
 
-Any host that supports Node.js 22.13+ can run `npm ci`, `npm run build`, then `npm start`. The server binds to `0.0.0.0` and uses the host's `PORT` environment variable (default 3000).
+Current Render service follows **riit-bharat-launch** automatically. Build: `npm ci --include=dev && npm run build`; start: `npm start`; health: `/api/health`. Push changes to this branch to redeploy; leave the original `main` branch untouched.
 
-- With a persistent disk: use `DB_PROVIDER=sqlite`, set `SQLITE_PATH` to a path on that disk, and run a single application instance.
-- With a temporary disk: use `DB_PROVIDER=supabase` and set its server-only credentials.
-- For publicly hosted admin access, use HTTPS and `NODE_ENV=production` so the session cookie is Secure. Keep TLS termination at the host/reverse proxy.
-- Static-only hosting (for example, GitHub Pages) cannot run this Node backend and private inbox by itself.
+For a new Supabase project, run **supabase.sql** and **platform.sql** once in SQL Editor. Both tables have RLS and deny anonymous/browser access. Only the Node server receives the secret API key.
 
-Docker build:
+| Environment variable | Value |
+| --- | --- |
+| NODE_VERSION | 22 |
+| NODE_ENV | production for HTTPS hosting |
+| DB_PROVIDER | supabase on Render Free; sqlite on a persistent disk/local computer |
+| SUPABASE_URL | Your project's HTTPS URL |
+| SUPABASE_SECRET_KEY | Server-only secret key; never put it in browser code |
+| ADMIN_PASSWORD | Unique owner password, at least 12 characters |
+| SESSION_SECRET | Random private string, at least 32 characters |
+| PORT | Host-assigned, defaults to 3000 |
+| SQLITE_PATH | Optional persistent database path for SQLite |
+
+For another Node host: `npm ci`, `npm run build`, `npm start`. The process binds `0.0.0.0:$PORT`. Use one application instance, HTTPS and a trusted reverse proxy. The current in-memory sessions/rate limits and serialized write queue assume a single Node instance. Multi-instance scaling needs shared sessions and database transactions.
+
+Render Free disks are temporary: the app refuses SQLite there. Use Supabase to keep records across restarts. Never upload `.env`, `data/` or credentials. There is no need to create a hosted `.env` file; Render supplies environment variables.
+
+Docker:
 
 ```bash
 docker build -t riit-mentors .
+docker run --rm -p 3000:3000 --env-file .env -v riit-data:/app/data riit-mentors
 ```
 
-Run the container with the environment variables above and, for SQLite, a persistent volume mounted at `/app/data`. Publish container port 3000 behind HTTPS. The runtime image needs no npm dependencies; the backend uses built-in Node modules.
+For a local HTTP Docker demo, omit NODE_ENV=production; for public hosting use HTTPS and production secure cookies. The container installs runtime dependencies for PDF extraction.
 
-## Files
+## Verification and practical limits
 
-- `src/`: React pages, owner login/inbox and styles.
-- `server/index.mjs`: API, password sessions, validation, rate limits, CSV and static hosting.
-- `server/store.mjs`: SQLite and Supabase adapters.
-- `scripts/setup.mjs`: private local configuration.
-- `supabase.sql`: hosted database schema and access restrictions.
-- `tests/app.test.mjs`: enquiry, owner-session, export and persistence checks.
-- `render.yaml`: optional free-plan deployment settings.
-- `Dockerfile`: portable container build.
+```bash
+npm test
+npm run build
+npm audit --omit=dev
+```
 
-## Security and operation
+Every production build runs the tests first, including on Render. Tests cover enquiry flow, owner authentication/export, database persistence, missing hosted configuration, modern Supabase key headers, student login/ownership boundaries, reviewed imports, test randomisation and hidden answer keys, scoring/idempotency, deadline enforcement, demo eligibility, manual payment verification, Meet URL validation, CSV/text/real-PDF parsing, password reset/session revocation and learning-data persistence.
 
-Admin sessions expire after eight hours and are cleared by logout. Server restarts also clear sessions, so sign in again. Login and enquiry submissions have basic request limits. Admin reads and exports require a valid session; writes use a same-origin check plus a custom request header. No browser code contains database credentials.
+Practice is single-answer MCQ preparation, not an official exam simulation for every JEE/NEET question format. Analysis is descriptive; there are no fake percentiles/ranks, adaptive AI questions, proctoring or admission predictions. Students may see the same question across different tests. Timers continue when leaving a test; after the deadline only pre-deadline saved responses count. After a restart sign in again, then resume the saved attempt.
 
-The inbox shows the latest 1,000 entries. CSV export includes up to 10,000. Click Refresh enquiries to load new requests. Status updates do not send messages or book a class.
-
-The ZIP contains code and a built frontend, not existing customer data or production credentials. Real enquiries from any previous system are not migrated automatically. The Supabase adapter still needs your own project and credentials before online deployment can be verified.
+Meet creation, tutor/time coordination, payment receipt verification, refunds, identity checks and question review are owner tasks. There is no Google OAuth/Calendar automation, automatic email/WhatsApp messaging, gateway settlement, OCR, full paper archive, subscriptions, group scheduling or entitlement system for paid test courses. Marketing group enquiries continue through the existing enquiry inbox; the lesson studio handles individual lessons. Forgotten owner passwords are reset privately in the host environment.

@@ -1,0 +1,4 @@
+export async function api(path:string,method='GET',data?:unknown){const r=await fetch('/api/'+path,{method,headers:{'Content-Type':'application/json','X-RIIT-CSRF':'1'},...(data!==undefined?{body:JSON.stringify(data)}:{})});const d=await r.json();if(!r.ok)throw Error(d.error||'Request failed. Please retry.');return d}
+export function download(name:string,data:string,type='application/json'){const url=URL.createObjectURL(new Blob([data],{type}));const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+export function stamp(value:string){return value?new Date(value).toLocaleString(undefined,{dateStyle:'medium',timeStyle:'short'}):'Awaiting confirmation'}
+export const subjects=['Mathematics','Physics','Chemistry','Botany','Zoology'];

@@ -1,0 +1,13 @@
+import {mkdirSync} from 'node:fs';
+import {dirname,resolve} from 'node:path';
+export async function createPlatformStore(config){
+ if(config.DB_PROVIDER==='supabase'){
+  const key=config.SUPABASE_SECRET_KEY||config.SUPABASE_SERVICE_ROLE_KEY;
+  const base=config.SUPABASE_URL.replace(/\/$/,'')+'/rest/v1/riit_records';
+  async function req(query='',method='GET',data){const r=await fetch(base+query,{method,headers:{apikey:key,...(!key.startsWith('sb_secret_')?{Authorization:'Bearer '+key}:{}),'Content-Type':'application/json',Prefer:'return=representation'},...(data?{body:JSON.stringify(data)}:{}),signal:AbortSignal.timeout(20000)});if(!r.ok){const e=Error('Learning database unavailable. Check the database setup.');e.status=r.status===409?409:503;throw e}return r.status===204?[]:r.json()}
+  return {async get(id){return (await req('?id=eq.'+encodeURIComponent(id)))[0]||null},async list(kind,owner,limit=1000,offset=0){return req('?kind=eq.'+encodeURIComponent(kind)+(owner!==undefined?'&owner=eq.'+encodeURIComponent(owner):'')+'&order=created_at.desc&limit='+limit+'&offset='+offset)},async insert(row){return (await req('','POST',row))[0]},async update(row){return (await req('?id=eq.'+encodeURIComponent(row.id),'PATCH',{payload:row.payload}))[0]},async remove(id){await req('?id=eq.'+encodeURIComponent(id),'DELETE')},close(){}};
+ }
+ const {DatabaseSync}=await import('node:sqlite');const location=config.SQLITE_PATH||resolve('data/enquiries.sqlite');if(location!==':memory:')mkdirSync(dirname(location),{recursive:true});const db=new DatabaseSync(location);db.exec('CREATE TABLE IF NOT EXISTS records(id TEXT PRIMARY KEY,kind TEXT NOT NULL,owner TEXT NOT NULL,created_at TEXT NOT NULL,payload TEXT NOT NULL); CREATE INDEX IF NOT EXISTS records_kind_owner ON records(kind,owner,created_at);');
+ const decode=r=>r?{...r,payload:JSON.parse(r.payload)}:null;
+ return {async get(id){return decode(db.prepare('SELECT * FROM records WHERE id=?').get(id))},async list(kind,owner,limit=1000,offset=0){return (owner!==undefined?db.prepare('SELECT * FROM records WHERE kind=? AND owner=? ORDER BY created_at DESC LIMIT ? OFFSET ?').all(kind,owner,limit,offset):db.prepare('SELECT * FROM records WHERE kind=? ORDER BY created_at DESC LIMIT ? OFFSET ?').all(kind,limit,offset)).map(decode)},async insert(row){db.prepare('INSERT INTO records VALUES(?,?,?,?,?)').run(row.id,row.kind,row.owner,row.created_at,JSON.stringify(row.payload));return row},async update(row){db.prepare('UPDATE records SET payload=? WHERE id=?').run(JSON.stringify(row.payload),row.id);return row},async remove(id){db.prepare('DELETE FROM records WHERE id=?').run(id)},close(){db.close()}};
+}
