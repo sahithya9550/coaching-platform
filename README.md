@@ -25,7 +25,7 @@ Independent React + Node application. The core app and guided study assistant ru
 | Analysis | Total marks, attempted accuracy, correct/incorrect/skipped, time used, topic accuracy, weak-topic suggestions, answer explanations and history |
 | Question bank | Admin uploads CSV/JSON/text/formatted text PDF, reviews extracted questions, publishes/hides questions, exports bank |
 | Lessons | One free demo per account, preferred-time requests, owner-confirmed time, private per-booking Google Meet link |
-| Payments | Paid one-hour lesson requests after completed demo; owner-configured UPI ID/payee/price; bank-reference submission; manual owner verification |
+| Payments | Paid one-hour lesson requests after completed demo; Razorpay hosted Payment Links with server-side status verification, or optional direct UPI with manual bank verification |
 | Owner oversight | Student results and topic breakdowns, lesson management, payment settings, lesson terms, downloadable learning backup |
 
 ## Bharat Study Guide
@@ -35,12 +35,12 @@ The homepage study assistant offers guided JEE, NEET and Foundation study sugges
 ## Start using the deployed app
 
 1. Open `/admin`. Sign in with the value of **ADMIN_PASSWORD** in your Render service → Environment. If you set ADMIN_PASSWORD_HASH instead, use the original password you hashed. Keep these values private. Nothing is printed in the app or committed.
-2. Under **Payment & terms**, enter your real UPI ID, exact payee name, lesson price, business contact email, payment instructions and rescheduling/refund terms. Save. No sample payee is configured on the live site. Paid bookings stay closed until these details are supplied.
+2. Under **Payment & terms**, save the final lesson price, business contact email, instructions and rescheduling/refund terms. Follow the Razorpay setup below. Supply a UPI ID and payee only if you also intend to accept direct bank payments.
 3. Under **Question bank**, the original starter bank is available. Download a CSV or JSON template for your own papers. Upload, validate, review every answer and explanation, confirm usage rights and publish. Hide a question to stop future tests using it.
 4. A learner/guardian opens `/learn`, creates an account with a 12–128 character password and consent, then starts practice or requests a free demo under **My lessons**. This app does not send account verification emails; email identifies the account.
 5. In **Lessons**, create a meeting using the **Create a Google Meet link** button. Google requires your own Google account. Paste the generated `https://meet.google.com/abc-defg-hij` link, select the confirmed lesson time and save as Scheduled. The student sees the link in their account. A requested time is not an automatically reserved calendar slot; coordinate tutor availability yourself.
-6. After delivering the demo, mark it Completed. The student can request a one-hour paid lesson. Their booking quotes the current price, UPI payee and terms. They pay using a compatible phone UPI/bank app and submit the transaction reference.
-7. Check your actual bank receipt. Only then select **Verified** and confirm the paid lesson time/Meet link. A submitted reference is never treated as proof of payment. The application does not receive funds or verify bank transactions automatically.
+6. After delivering the demo, mark it Completed. The student can request a one-hour paid lesson. Their booking quotes the saved price and terms. For Razorpay, open checkout and return to the booking to **Check payment status**. For direct UPI, pay in a bank/UPI app and submit the transaction reference.
+7. Razorpay bookings become Verified after the app confirms the full INR amount with Razorpay. For direct UPI, check the actual bank receipt before selecting **Verified**. Confirm the lesson time and Meet link after verification.
 8. Review student test summaries/topic analysis in **Students & results**. Use the backup download regularly and keep it private. Verify identity before resetting a learner password.
 
 ## Run on your computer
@@ -65,6 +65,13 @@ Choose a unique owner password during setup. Setup creates private `.env` with a
 In the local owner workspace click **Question bank → Add original starter questions**. A fresh local database starts empty. Hosted questions are not copied to your computer automatically.
 
 Records persist in `data/enquiries.sqlite`. Stop with Ctrl+C. Restart with `npm start`. Back up this database with the server stopped, plus `.env`, privately. Sessions expire after eight hours and clear on restart; sign in again. `npm run dev` rebuilds and starts the server, without hot reload.
+
+## Activate Razorpay checkout
+
+1. Complete Razorpay merchant onboarding. Start on a staging or local app with `RAZORPAY_MODE=test`, `RAZORPAY_KEY_ID`, and `RAZORPAY_KEY_SECRET`. The key ID must match the mode. Test bookings can confirm a test payment but never unlock live lessons.
+2. In **Payment & terms**, save the final lesson price, customer support email and lesson terms. For a Razorpay-only setup, leave the direct UPI ID and payee empty. During a completed-demo pilot, request a paid lesson, open Razorpay checkout, and select **Check payment status** after payment. That button checks Razorpay from the server.
+3. After the test passes, set `RAZORPAY_MODE=live` and your live key pair in Render’s private **Environment** settings. Keep the keys server-side. Publish the final pricing and terms before accepting payments.
+4. The app opens a 24-hour INR payment link tied to the booking. Expired links require a new booking. Manage refunds in the Razorpay Dashboard. No webhook is required for the **Check payment status** button.
 
 ## Question import formats
 
@@ -98,7 +105,7 @@ Explanation: Adding one and one gives two.
 
 For PDF/text choose exam, subject, level, topic and source in the import form. Extraction supports text PDFs up to 100 pages, not arbitrary paper layouts. Scans need transcription/OCR outside this app. Diagrams, numerical-response questions, multiple-correct JEE Advanced formats and complex equation rendering are not supported. All questions must be reviewed; the app never guesses missing answer keys.
 
-Starter bank: **24 original questions**, not official past-year questions. There is no preloaded complete IIT/JEE/NEET archive. Import only material you own or have permission to use and label paper/year/source accurately. Random tests draw from the published bank; if too few questions match, reduce the requested count or import more.
+Starter bank: **24 original questions**, not official past-year questions. There is no preloaded complete IIT/JEE/NEET archive. Import only material you own or have permission to use and label paper/year/source accurately. The NTA sites for [JEE Main](https://jeemain.nta.nic.in/) and [NEET](https://neet.nta.nic.in/) are references for checking official material. A public download does not itself grant republishing permission. For Word documents, save as text or transfer the questions to the CSV template. Random tests draw from the published bank; if too few questions match, reduce the requested count or import more.
 
 ## Free hosting and costs
 
@@ -106,7 +113,7 @@ This deployment selects **Render Free + Supabase Free** with a free `onrender.co
 
 **Free is not unlimited.** Render has monthly resource/bandwidth/build quotas and sleeps after 15 minutes idle; a cold start may take about a minute. Supabase Free currently includes a 500 MB database and limited egress; inactive projects can pause. Stored question snapshots and results consume database capacity. At scale you must archive data, self-host on your own hardware or choose more capacity. There is no promise of permanent zero-cost unlimited hosting or an uptime SLA.
 
-A regular `.com` registration costs money. The current free URL is the domain to use for a ₹0 launch. Direct UPI is a bank/app handoff, not a payment gateway integration; bank/provider terms apply. Automated card gateways typically charge transaction fees and require merchant setup, so none is enabled. Google Meet requires the mentor's own account and is subject to Google's limits.
+A regular `.com` registration costs money. The current free URL is the domain to use for a ₹0 launch. Direct UPI is a bank/app handoff, not a payment gateway integration; bank/provider terms apply. Razorpay checkout requires merchant approval and configuration, and provider fees apply to live transactions. Google Meet requires the mentor's own account and is subject to Google's limits.
 
 Sources checked 9 November 2026:
 - https://render.com/docs/free
@@ -157,4 +164,4 @@ Every production build runs the tests first, including on Render. Tests cover en
 
 Practice is single-answer MCQ preparation, not an official exam simulation for every JEE/NEET question format. Analysis is descriptive; there are no fake percentiles/ranks, adaptive AI questions, proctoring or admission predictions. Students may see the same question across different tests. Timers continue when leaving a test; after the deadline only pre-deadline saved responses count. After a restart sign in again, then resume the saved attempt.
 
-Meet creation, tutor/time coordination, payment receipt verification, refunds, identity checks and question review are owner tasks. There is no Google OAuth/Calendar automation, automatic email/WhatsApp messaging, gateway settlement, OCR, full paper archive, subscriptions, group scheduling or entitlement system for paid test courses. Marketing group enquiries continue through the existing enquiry inbox; the lesson studio handles individual lessons. Forgotten owner passwords are reset privately in the host environment.
+Meet creation, tutor/time coordination, payment receipt verification, refunds, identity checks and question review are owner tasks. There is no Google OAuth/Calendar automation, automatic email/WhatsApp messaging, automatic refunds, OCR, full paper archive, subscriptions, group scheduling or entitlement system for paid test courses. Marketing group enquiries continue through the existing enquiry inbox; the lesson studio handles individual lessons. Forgotten owner passwords are reset privately in the host environment.
