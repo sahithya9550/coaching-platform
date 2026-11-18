@@ -26,6 +26,15 @@ export async function createApp(config=process.env){
   res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'");res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','strict-origin-when-cross-origin');res.setHeader('X-Frame-Options','DENY');
   try{const forwarded=String(req.headers['x-forwarded-for']||'').split(',').at(-1)?.trim();req.riitIP=config.RENDER&&isIP(forwarded||'')?forwarded:req.socket.remoteAddress;const url=new URL(req.url,'http://localhost'),path=url.pathname,method=req.method;
    if(path==='/api/health')return json(res,200,{ok:true});
+   if(path==='/api/ready'&&method==='GET'){
+    try{
+     await Promise.all([store.list(1),platform.checkStorage()]);
+     return json(res,200,{ok:true});
+    }catch(error){
+     console.error('Database readiness check failed:',error.message);
+     return json(res,503,{ok:false});
+    }
+   }
    if(path.startsWith('/api/')&&!['GET','HEAD'].includes(method)&&!sameOrigin(req))return json(res,403,{error:'Please submit from this website.'});
    if(path==='/api/enquiries'&&method==='POST'){
     if(throttle('form:'+req.riitIP,30))return json(res,429,{error:'Too many requests. Please try later.'});

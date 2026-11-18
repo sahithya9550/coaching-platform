@@ -67,6 +67,6 @@ export async function createPlatform(config){
   if(path==='/api/learning/submit-test'&&method==='POST')return exclusive(async()=>{const d=await body(req),a=await own(d.id,'attempt',u);if(a.payload.status==='Submitted')return send(200,a.payload.result);const late=Date.now()>Date.parse(a.payload.expiresAt);const answers=late?a.payload.answers:checkAnswers(d.answers,a.payload.questions.length);a.payload.answers=answers;a.payload.result={...scoreAttempt(a.payload,answers),elapsedSeconds:Math.min(Math.round((Date.now()-Date.parse(a.payload.startedAt))/1000),Math.round((Date.parse(a.payload.expiresAt)-Date.parse(a.payload.startedAt))/1000)),timedOut:late};a.payload.status='Submitted';a.payload.submittedAt=new Date().toISOString();await db.update(a);return send(200,a.payload.result)});
   return send(404,{error:'Learning route not found.'});
  }
- return {handle,close:()=>db.close()};
+ return {handle,checkStorage:()=>db.get('settings'),close:()=>db.close()};
 }
 function checkAnswers(answers,count){if(!answers||typeof answers!=='object'||Array.isArray(answers))fail('Invalid answers.');const out={};for(const [key,value]of Object.entries(answers)){if(!/^\d+$/.test(key)||Number(key)>=count||!Number.isInteger(value)||value<0||value>3)fail('Invalid answer option.');out[key]=value}return out}

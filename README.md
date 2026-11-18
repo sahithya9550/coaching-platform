@@ -10,7 +10,8 @@ Independent React + Node application. Runs without any ChatGPT login or paid AI 
 - Website: https://riit-bharat-mentors-uu3f.onrender.com
 - Student studio: https://riit-bharat-mentors-uu3f.onrender.com/learn
 - Owner workspace: https://riit-bharat-mentors-uu3f.onrender.com/admin
-- Health: https://riit-bharat-mentors-uu3f.onrender.com/api/health
+- Process health: https://riit-bharat-mentors-uu3f.onrender.com/api/health
+- Storage readiness: `/api/ready` checks reads from both backing tables and returns HTTP 503 if either is unavailable.
 
 ## Included workflows
 

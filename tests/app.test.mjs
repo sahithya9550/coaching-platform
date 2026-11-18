@@ -34,3 +34,35 @@ test('modern Supabase secret keys stay in server-side apikey headers',async()=>{
  await new Promise(r=>backend.listen(0,'127.0.0.1',r));
  try{const db=await createStore({DB_PROVIDER:'supabase',SUPABASE_URL:'http://127.0.0.1:'+backend.address().port,SUPABASE_SECRET_KEY:'sb_secret_test_only'});assert.equal((await db.list())[0].parentName,'Adapter test');assert.equal(seen.apikey,'sb_secret_test_only');assert.equal(seen.authorization,undefined)}finally{await new Promise(r=>backend.close(r))}
 });
+
+test('readiness detects storage failures independently of process health', async () => {
+ const {createServer}=await import('node:http');
+ let unavailableTable='';
+ const backend=createServer((req,res)=>{
+  const unavailable=unavailableTable && req.url.includes(unavailableTable);
+  res.writeHead(unavailable?503:200,{'Content-Type':'application/json'});
+  res.end('[]');
+ });
+ await new Promise(resolve=>backend.listen(0,'127.0.0.1',resolve));
+ const app=await createApp({
+  ...config,
+  DB_PROVIDER:'supabase',
+  SUPABASE_URL:'http://127.0.0.1:'+backend.address().port,
+  SUPABASE_SECRET_KEY:'sb_secret_test_only'
+ });
+ await new Promise(resolve=>app.server.listen(0,'127.0.0.1',resolve));
+ const base='http://127.0.0.1:'+app.server.address().port;
+ try {
+  assert.equal((await fetch(base+'/api/ready')).status,200);
+  for(const table of ['riit_records','riit_enquiries']){
+   unavailableTable=table;
+   const readiness=await fetch(base+'/api/ready');
+   assert.equal(readiness.status,503);
+   assert.deepEqual(await readiness.json(),{ok:false});
+   assert.equal((await fetch(base+'/api/health')).status,200);
+  }
+ } finally {
+  await app.close();
+  await new Promise(resolve=>backend.close(resolve));
+ }
+});
