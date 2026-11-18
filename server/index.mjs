@@ -6,6 +6,7 @@ import {randomBytes,randomUUID,scryptSync,timingSafeEqual,createHmac} from 'node
 import {fileURLToPath} from 'node:url';
 import {createStore} from './store.mjs';
 import {createPlatform} from './platform.mjs';
+import {studyGuide} from './study-guide.mjs';
 const stages=['New','Contacted','Demo scheduled','Enrolled','Closed'];
 export function hashPassword(password,salt=randomBytes(16).toString('hex')){return salt+':'+scryptSync(password,salt,64).toString('hex')}
 function verifyPassword(password,hash){try{const [salt,key]=hash.split(':'),expected=Buffer.from(key,'hex'),actual=scryptSync(password,salt,64);return expected.length===64&&timingSafeEqual(expected,actual)}catch{return false}}
@@ -36,6 +37,10 @@ export async function createApp(config=process.env){
     }
    }
    if(path.startsWith('/api/')&&!['GET','HEAD'].includes(method)&&!sameOrigin(req))return json(res,403,{error:'Please submit from this website.'});
+   if(path==='/api/study-guide'&&method==='POST'){
+    if(throttle('guide:'+req.riitIP,12)||throttle('guide:total',60))return json(res,429,{error:'The study guide is busy. Please try again in a few minutes.'});
+    return json(res,200,await studyGuide(await body(req),config));
+   }
    if(path==='/api/enquiries'&&method==='POST'){
     if(throttle('form:'+req.riitIP,30))return json(res,429,{error:'Too many requests. Please try later.'});
     const data=validate(await body(req));if(!data)return json(res,400,{error:'Check all fields, your Indian mobile number, and adult/guardian consent.'});

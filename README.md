@@ -3,7 +3,7 @@
 Personalised JEE & NEET Coaching  
 **Your Ambition. Our Guidance. A Personalised Path.**
 
-Independent React + Node application. Runs without any ChatGPT login or paid AI API. SQLite locally; Supabase server-only REST storage when hosted on Render Free.
+Independent React + Node application. The core app and guided study assistant run without a ChatGPT login or paid AI API. SQLite locally; Supabase server-only REST storage when hosted on Render Free.
 
 ## Live application
 
@@ -27,6 +27,10 @@ Independent React + Node application. Runs without any ChatGPT login or paid AI 
 | Lessons | One free demo per account, preferred-time requests, owner-confirmed time, private per-booking Google Meet link |
 | Payments | Paid one-hour lesson requests after completed demo; owner-configured UPI ID/payee/price; bank-reference submission; manual owner verification |
 | Owner oversight | Student results and topic breakdowns, lesson management, payment settings, lesson terms, downloadable learning backup |
+
+## Bharat Study Guide
+
+The homepage study assistant offers guided JEE, NEET and Foundation study suggestions with no external service. To optionally enable generated replies, set `STUDY_GUIDE_AI_ENABLED=true` and `OPENAI_API_KEY` in the server environment. The default model is `gpt-5-mini` and can be overridden with `STUDY_GUIDE_OPENAI_MODEL`. Generated replies are subject to the API account’s usage charges. The app uses guided replies when AI is disabled or the model service is unavailable. It sends only the selected exam, study time and entered question, and does not save chat history. Keep personal information out of prompts.
 
 ## Start using the deployed app
 

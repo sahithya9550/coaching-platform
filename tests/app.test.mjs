@@ -66,3 +66,28 @@ test('readiness detects storage failures independently of process health', async
   await new Promise(resolve=>backend.close(resolve));
  }
 });
+
+test('study guide offers exam-specific suggestions without an API key', async () => {
+ const app=await createApp(config);
+ await new Promise(resolve=>app.server.listen(0,'127.0.0.1',resolve));
+ const base='http://127.0.0.1:'+app.server.address().port;
+ const ask=(data,origin=base)=>fetch(base+'/api/study-guide',{
+  method:'POST',
+  headers:{'Content-Type':'application/json',Origin:origin},
+  body:JSON.stringify(data)
+ });
+ const prompt={exam:'NEET',minutes:30,question:'Plan my next study session'};
+ try {
+  const response=await ask(prompt);
+  assert.equal(response.status,200);
+  const plan=await response.json();
+  assert.equal(plan.mode,'guided');
+  assert.match(plan.reply,/NEET.*Biology.*15 minutes.*10 minutes.*5 minutes/);
+  const review=await (await ask({...prompt,question:'What should I review after a quiz?'})).json();
+  assert.match(review.reply,/concept gap/);
+  assert.equal((await ask({...prompt,exam:['NEET']})).status,400);
+  assert.equal((await ask(prompt,'https://other.example')).status,403);
+ } finally {
+  await app.close();
+ }
+});
