@@ -69,8 +69,8 @@ export async function createApp(config=process.env){
    if(candidate!==root&&!candidate.startsWith(root+sep))return json(res,403,{error:'Forbidden.'});
    let file=candidate;if(!existsSync(file)||!statSync(file).isFile()){if(path==='/'||path==='/admin'||path==='/admin/'||path==='/learn'||path==='/learn/')file=resolve(root,'index.html');else return json(res,404,{error:'Not found.'})}
    if(!existsSync(file))return json(res,503,{error:'Run npm run build first.'});
-   const types={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.svg':'image/svg+xml','.jpg':'image/jpeg','.png':'image/png','.woff2':'font/woff2'};
-   res.writeHead(200,{'Content-Type':types[extname(file)]||'application/octet-stream','Cache-Control':extname(file)==='.html'?'no-cache':'public, max-age=3600'});if(method==='HEAD')return res.end();createReadStream(file).pipe(res);
+   const types={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.svg':'image/svg+xml','.jpg':'image/jpeg','.png':'image/png','.woff2':'font/woff2','.webmanifest':'application/manifest+json; charset=utf-8'};
+   res.writeHead(200,{'Content-Type':types[extname(file)]||'application/octet-stream','Cache-Control':(extname(file)==='.html'||path==='/sw.js'||path==='/manifest.webmanifest')?'no-cache':'public, max-age=3600'});if(method==='HEAD')return res.end();createReadStream(file).pipe(res);
   }catch(e){if(!res.headersSent)json(res,e.status||503,{error:e.status?e.message:'Unable to complete this request. Please try again.'});else res.end()}
  });
  return {server,store,close:()=>new Promise(resolve=>server.close(()=>{store.close();platform.close();resolve()}))};

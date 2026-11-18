@@ -32,6 +32,10 @@ Independent React + Node application. The core app and guided study assistant ru
 
 The homepage study assistant offers guided JEE, NEET and Foundation study suggestions with no external service. To optionally enable generated replies, set `STUDY_GUIDE_AI_ENABLED=true` and `OPENAI_API_KEY` in the server environment. The default model is `gpt-5-mini` and can be overridden with `STUDY_GUIDE_OPENAI_MODEL`. Generated replies are subject to the API account’s usage charges. The app uses guided replies when AI is disabled or the model service is unavailable. It sends only the selected exam, study time and entered question, and does not save chat history. Keep personal information out of prompts.
 
+## Install on Android or iPhone
+
+Visit [Install R-IIT Bharat Mentors](https://riit-bharat-mentors-uu3f.onrender.com/install.html). Android Chrome and iPhone Safari can add the web app to the home screen. The app uses the same accounts and backend as the website. Quizzes, bookings and payments need internet access. This deployment uses a progressive web app and does not include native store packages.
+
 ## Start using the deployed app
 
 1. Open `/admin`. Sign in with the value of **ADMIN_PASSWORD** in your Render service → Environment. If you set ADMIN_PASSWORD_HASH instead, use the original password you hashed. Keep these values private. Nothing is printed in the app or committed.
